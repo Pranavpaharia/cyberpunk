@@ -18,7 +18,7 @@
  * 
  */
 UCLASS()
-class UGeoConverter
+class THOUGHTFISHCOALAPLUGIN_API UGeoConverter
 : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()

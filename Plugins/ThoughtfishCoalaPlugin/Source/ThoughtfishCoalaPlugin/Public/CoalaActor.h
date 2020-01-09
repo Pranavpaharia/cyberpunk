@@ -8,7 +8,7 @@
 #include "CoalaActor.generated.h"
 
 UCLASS()
-class ACoalaActor : public AActor
+class THOUGHTFISHCOALAPLUGIN_API ACoalaActor : public AActor
 {
 	GENERATED_BODY()
 	

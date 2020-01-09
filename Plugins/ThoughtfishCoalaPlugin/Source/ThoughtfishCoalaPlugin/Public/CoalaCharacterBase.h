@@ -10,7 +10,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams( FOnWorldPositionChanged, float, lon, float, lat );
 
 UCLASS()
-class ACoalaCharacterBase : public ACharacter
+class THOUGHTFISHCOALAPLUGIN_API ACoalaCharacterBase : public ACharacter
 {
 	GENERATED_BODY()
 

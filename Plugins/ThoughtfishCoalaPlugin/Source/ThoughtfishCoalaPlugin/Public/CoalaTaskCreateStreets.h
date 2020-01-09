@@ -10,7 +10,7 @@
  * 
  */
 
-class FCoalaTaskCreateStreets : public FRunnable
+class THOUGHTFISHCOALAPLUGIN_API FCoalaTaskCreateStreets : public FRunnable
 {
 public:
 	static FCoalaTaskCreateStreets* Runnable;

@@ -11,42 +11,42 @@
  * 
  */
 UCLASS()
-class UCoalaRequestBase : public UBlueprintFunctionLibrary
+class THOUGHTFISHCOALAPLUGIN_API UCoalaRequestBase : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	
 };
 
 UCLASS()
-class UCoalaRequest : public UCoalaRequestBase
+class THOUGHTFISHCOALAPLUGIN_API UCoalaRequest : public UCoalaRequestBase
 {
 	GENERATED_BODY()
 	
 };
 
 UCLASS()
-class UGolfcourseRequest : public UCoalaRequestBase
+class THOUGHTFISHCOALAPLUGIN_API UGolfcourseRequest : public UCoalaRequestBase
 {
 	GENERATED_BODY()
 	
 };
 
 UCLASS()
-class UVectorTileRequest : public UCoalaRequestBase
+class THOUGHTFISHCOALAPLUGIN_API UVectorTileRequest : public UCoalaRequestBase
 {
 	GENERATED_BODY()
 
 };
 
 UCLASS()
-class UWeatherRequest : public UCoalaRequestBase
+class THOUGHTFISHCOALAPLUGIN_API UWeatherRequest : public UCoalaRequestBase
 {
 	GENERATED_BODY()
 
 };
 
 UCLASS()
-class UGeofencingRequest : public UCoalaRequestBase
+class THOUGHTFISHCOALAPLUGIN_API UGeofencingRequest : public UCoalaRequestBase
 {
 	GENERATED_BODY()
 

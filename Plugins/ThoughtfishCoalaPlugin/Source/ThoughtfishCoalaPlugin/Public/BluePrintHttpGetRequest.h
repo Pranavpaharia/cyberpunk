@@ -16,7 +16,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam( FOnSuccess, FString, response );
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam( FOnError, FString, reason );
 
 UCLASS( BlueprintType, Blueprintable, Category = "Coala|http" )
-class UBluePrintHttpGetRequest
+class THOUGHTFISHCOALAPLUGIN_API UBluePrintHttpGetRequest
 : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()

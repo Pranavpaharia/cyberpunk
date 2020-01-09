@@ -12,7 +12,7 @@
 #include "Core/Public/Async/Async.h"
 
 
-class FCoalaReadJsonAsync : public FRunnable
+class THOUGHTFISHCOALAPLUGIN_API FCoalaReadJsonAsync : public FRunnable
 {
 public:
 	static FCoalaReadJsonAsync* Runnable;

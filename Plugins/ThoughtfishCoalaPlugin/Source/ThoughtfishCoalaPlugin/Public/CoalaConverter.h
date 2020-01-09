@@ -8,7 +8,7 @@
 /**
  * 
  */
-class CoalaConverter
+class THOUGHTFISHCOALAPLUGIN_API CoalaConverter
 {
 	public:
 		static class UCoalaArea* JsonToCoalaArea( FString jsonString, int defaultBuildingLevel = 1, bool clampToDefaultBuildingLevel = false, int limitMaxBuildingLevelTo = 0 );

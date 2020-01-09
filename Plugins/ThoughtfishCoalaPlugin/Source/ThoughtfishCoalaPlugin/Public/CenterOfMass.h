@@ -8,7 +8,7 @@
 /**
  * 
  */
-class CenterOfMass
+class THOUGHTFISHCOALAPLUGIN_API CenterOfMass
 {
 	public:
 		static class UCoalaGPSCoordinates* Get( const TArray<FVector>& vertices );

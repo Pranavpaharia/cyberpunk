@@ -10,7 +10,7 @@
  *
  */
 
-class FCoalaTaskCreateWater : public FRunnable
+class THOUGHTFISHCOALAPLUGIN_API FCoalaTaskCreateWater : public FRunnable
 {
 public:
 	static FCoalaTaskCreateWater* Runnable;

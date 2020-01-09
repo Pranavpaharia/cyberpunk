@@ -11,7 +11,7 @@
  * 
  */
 UCLASS()
-class UCoalaDownloader
+class THOUGHTFISHCOALAPLUGIN_API UCoalaDownloader
 : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()

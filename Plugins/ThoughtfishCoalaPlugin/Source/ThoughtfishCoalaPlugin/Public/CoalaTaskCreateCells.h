@@ -9,7 +9,7 @@
 #include <map>
 
 
-class FCoalaTaskCreateCells 
+class THOUGHTFISHCOALAPLUGIN_API FCoalaTaskCreateCells
 : public FRunnable
 {
 public:

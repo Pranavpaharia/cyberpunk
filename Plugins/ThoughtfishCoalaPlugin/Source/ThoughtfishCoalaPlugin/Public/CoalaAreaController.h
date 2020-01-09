@@ -14,7 +14,7 @@
  * 
  */
 UCLASS()
-class UCoalaAreaController : public UBlueprintFunctionLibrary
+class THOUGHTFISHCOALAPLUGIN_API UCoalaAreaController : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 	

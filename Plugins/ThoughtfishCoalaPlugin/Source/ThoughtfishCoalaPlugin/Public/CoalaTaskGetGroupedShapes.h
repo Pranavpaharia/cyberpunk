@@ -6,7 +6,7 @@
 #include "CoreMinimal.h"
 #include "Core/Public/Async/Async.h"
 
-class FCoalaTaskGetGroupedShapes : public FRunnable
+class THOUGHTFISHCOALAPLUGIN_API FCoalaTaskGetGroupedShapes : public FRunnable
 {
 public:
 	static FCoalaTaskGetGroupedShapes* Runnable;

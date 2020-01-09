@@ -57,7 +57,7 @@ struct FCoalaAreaDecorationConfiguration
 };
 
 UCLASS()
-class UCoalaDecorator : public UBlueprintFunctionLibrary
+class THOUGHTFISHCOALAPLUGIN_API UCoalaDecorator : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 
