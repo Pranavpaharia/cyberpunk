@@ -18,7 +18,7 @@ public:
 
 IMPLEMENT_MODULE( FCoalaPluginModule, ThoughtfishCoalaPlugin )
 
-
+DEFINE_LOG_CATEGORY(LogCoala)
 
 void FCoalaPluginModule::StartupModule()
 {

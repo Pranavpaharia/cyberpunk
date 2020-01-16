@@ -7,3 +7,6 @@
 #include "EngineMinimal.h"
 //#include "Engine.h"	// For UEngine
 #include "EngineGlobals.h"	// For GEngine
+
+
+DECLARE_LOG_CATEGORY_EXTERN(LogCoala, Log, All);
