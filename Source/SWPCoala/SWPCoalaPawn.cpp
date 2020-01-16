@@ -23,22 +23,25 @@ ASWPCoalaPawn::ASWPCoalaPawn()
 	static FConstructorStatics ConstructorStatics;
 
 	// Create static mesh component
-	PlaneMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlaneMesh0"));
-	PlaneMesh->SetStaticMesh(ConstructorStatics.PlaneMesh.Get());	// Set static mesh
-	RootComponent = PlaneMesh;
+	//PlaneMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlaneMesh0"));
+	//PlaneMesh->SetStaticMesh(ConstructorStatics.PlaneMesh.Get());	// Set static mesh
+	//RootComponent = PlaneMesh;
 
-	// Create a spring arm component
-	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm0"));
-	SpringArm->SetupAttachment(RootComponent);	// Attach SpringArm to RootComponent
-	SpringArm->TargetArmLength = 160.0f; // The camera follows at this distance behind the character	
-	SpringArm->SocketOffset = FVector(0.f,0.f,60.f);
-	SpringArm->bEnableCameraLag = false;	// Do not allow camera to lag
-	SpringArm->CameraLagSpeed = 15.f;
+	//PlayerHookComponent = CreateDefaultSubobject<USceneComponent>(TEXT("PlayrePositionHook"));
+	//PlayerHookComponent->SetupAttachment(CapsuleComponent);
 
-	// Create camera component 
-	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera0"));
-	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);	// Attach the camera
-	Camera->bUsePawnControlRotation = false; // Don't rotate camera with controller
+	//// Create a spring arm component
+	//SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm0"));
+	//SpringArm->SetupAttachment(RootComponent);	// Attach SpringArm to RootComponent
+	//SpringArm->TargetArmLength = 160.0f; // The camera follows at this distance behind the character	
+	//SpringArm->SocketOffset = FVector(0.f,0.f,60.f);
+	//SpringArm->bEnableCameraLag = false;	// Do not allow camera to lag
+	//SpringArm->CameraLagSpeed = 15.f;
+
+	//// Create camera component 
+	//Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera0"));
+	//Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);	// Attach the camera
+	//Camera->bUsePawnControlRotation = false; // Don't rotate camera with controller
 
 	// Set handling parameters
 	Acceleration = 500.f;
@@ -52,17 +55,17 @@ void ASWPCoalaPawn::Tick(float DeltaSeconds)
 {
 	const FVector LocalMove = FVector(CurrentForwardSpeed * DeltaSeconds, 0.f, 0.f);
 
-	// Move plan forwards (with sweep so we stop when we collide with things)
-	AddActorLocalOffset(LocalMove, true);
+	//// Move plan forwards (with sweep so we stop when we collide with things)
+	//AddActorLocalOffset(LocalMove, true);
 
-	// Calculate change in rotation this frame
-	FRotator DeltaRotation(0,0,0);
-	DeltaRotation.Pitch = CurrentPitchSpeed * DeltaSeconds;
-	DeltaRotation.Yaw = CurrentYawSpeed * DeltaSeconds;
-	DeltaRotation.Roll = CurrentRollSpeed * DeltaSeconds;
+	//// Calculate change in rotation this frame
+	//FRotator DeltaRotation(0,0,0);
+	//DeltaRotation.Pitch = CurrentPitchSpeed * DeltaSeconds;
+	//DeltaRotation.Yaw = CurrentYawSpeed * DeltaSeconds;
+	//DeltaRotation.Roll = CurrentRollSpeed * DeltaSeconds;
 
-	// Rotate plane
-	AddActorLocalRotation(DeltaRotation);
+	//// Rotate plane
+	//AddActorLocalRotation(DeltaRotation);
 
 	// Call any parent class Tick implementation
 	Super::Tick(DeltaSeconds);
@@ -84,9 +87,11 @@ void ASWPCoalaPawn::SetupPlayerInputComponent(class UInputComponent* PlayerInput
 	check(PlayerInputComponent);
 
 	// Bind our control axis' to callback functions
-	PlayerInputComponent->BindAxis("Thrust", this, &ASWPCoalaPawn::ThrustInput);
+	/*PlayerInputComponent->BindAxis("Thrust", this, &ASWPCoalaPawn::ThrustInput);
 	PlayerInputComponent->BindAxis("MoveUp", this, &ASWPCoalaPawn::MoveUpInput);
-	PlayerInputComponent->BindAxis("MoveRight", this, &ASWPCoalaPawn::MoveRightInput);
+	PlayerInputComponent->BindAxis("MoveRight", this, &ASWPCoalaPawn::MoveRightInput);*/
+
+	Super::SetupInputComponent();
 }
 
 void ASWPCoalaPawn::ThrustInput(float Val)
@@ -131,3 +136,38 @@ void ASWPCoalaPawn::MoveRightInput(float Val)
 	// Smoothly interpolate roll speed
 	CurrentRollSpeed = FMath::FInterpTo(CurrentRollSpeed, TargetRollSpeed, GetWorld()->GetDeltaSeconds(), 2.f);
 }
+
+EMapExpansion ASWPCoalaPawn::GetExpansionDirection()
+{
+	EMapExpansion mapDir = EMapExpansion::None;
+
+	switch (PlayerDir)
+	{
+		case EPlayerDirEnum::PD_North:
+		{
+			mapDir = EMapExpansion::NorthExp;
+			break;
+		}
+
+		case EPlayerDirEnum::PD_South:
+		{
+			mapDir = EMapExpansion::SouthExp;
+			break;
+		}
+
+		case EPlayerDirEnum::PD_East:
+		{
+			mapDir = EMapExpansion::EastExp;
+			break;
+		}
+
+		case EPlayerDirEnum::PD_West:
+		{
+			mapDir = EMapExpansion::WestExp;
+			break;
+		}
+	}
+
+	return mapDir;
+}
+

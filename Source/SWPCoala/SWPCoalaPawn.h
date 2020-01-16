@@ -3,10 +3,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "SWPCoala.h"
+#include "CoalaCharacterBase.h"
 #include "SWPCoalaPawn.generated.h"
 
+
+
+//struct EMapExpansion;
+
 UCLASS(Config=Game)
-class ASWPCoalaPawn : public APawn
+class ASWPCoalaPawn : public ACoalaCharacterBase
 {
 	GENERATED_BODY()
 
@@ -14,21 +20,25 @@ class ASWPCoalaPawn : public APawn
 	UPROPERTY(Category = Mesh, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UStaticMeshComponent* PlaneMesh;
 
-	/** Spring arm that will offset the camera */
-	UPROPERTY(Category = Camera, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class USpringArmComponent* SpringArm;
+	///** Spring arm that will offset the camera */
+	//UPROPERTY(Category = Camera, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	//class USpringArmComponent* SpringArm;
 
-	/** Camera component that will be our viewpoint */
-	UPROPERTY(Category = Camera, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UCameraComponent* Camera;
+	///** Camera component that will be our viewpoint */
+	//UPROPERTY(Category = Camera, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	//class UCameraComponent* Camera;
 public:
+
+	/*UPROPERTY(Category = Camera, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class USceneComponent* PlayerHookComponent;*/
+
 	ASWPCoalaPawn();
 
 	// Begin AActor overrides
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void NotifyHit(class UPrimitiveComponent* MyComp, class AActor* Other, class UPrimitiveComponent* OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult& Hit) override;
 	// End AActor overrides
-
+	
 protected:
 
 	// Begin APawn overrides
@@ -44,22 +54,22 @@ protected:
 	/** Bound to the horizontal axis */
 	void MoveRightInput(float Val);
 
-private:
+public:
 
 	/** How quickly forward speed changes */
-	UPROPERTY(Category=Plane, EditAnywhere)
-	float Acceleration;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite,Category=Plane)
+	int32 Acceleration;
 
 	/** How quickly pawn can steer */
-	UPROPERTY(Category=Plane, EditAnywhere)
-	float TurnSpeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Plane)
+	int32 TurnSpeed;
 
 	/** Max forward speed */
-	UPROPERTY(Category = Pitch, EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Pitch)
 	float MaxSpeed;
 
 	/** Min forward speed */
-	UPROPERTY(Category=Yaw, EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Yaw)
 	float MinSpeed;
 
 	/** Current forward speed */
@@ -74,11 +84,18 @@ private:
 	/** Current roll speed */
 	float CurrentRollSpeed;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerDir)
+	EPlayerDirEnum PlayerDir;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerDir)
+	AActor* mapObject;
+
 public:
+	EMapExpansion GetExpansionDirection();
 	/** Returns PlaneMesh subobject **/
-	FORCEINLINE class UStaticMeshComponent* GetPlaneMesh() const { return PlaneMesh; }
-	/** Returns SpringArm subobject **/
-	FORCEINLINE class USpringArmComponent* GetSpringArm() const { return SpringArm; }
-	/** Returns Camera subobject **/
-	FORCEINLINE class UCameraComponent* GetCamera() const { return Camera; }
+	//FORCEINLINE class UStaticMeshComponent* GetPlaneMesh() const { return PlaneMesh; }
+	///** Returns SpringArm subobject **/
+	//FORCEINLINE class USpringArmComponent* GetSpringArm() const { return SpringArm; }
+	///** Returns Camera subobject **/
+	//FORCEINLINE class UCameraComponent* GetCamera() const { return Camera; }
 };
