@@ -3,6 +3,14 @@
 
 #include "SWPMapBase.h"
 #include "CoalaAreaController.h"
+#include "BluePrintHttpGetRequest.h"
+#include "CoalaMeshGenerator.h"
+#include "CoalaReadJsonAsync.h"
+#include "TopDownPlayerController.h"
+#include "CoalaMeshActor.h"
+#include "CoalaBlueprintUtility.h"
+
+class UCoalaAreaController;
 
 // Sets default values
 ASWPMapBase::ASWPMapBase()
@@ -10,25 +18,53 @@ ASWPMapBase::ASWPMapBase()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	
+	defaultBuildingLevel = 3;
+	clampToDefaultBuildingLevel = true;
+	limitMaxBuildingLevelTo = 0;
+	CellZOffSet = -2.0f;
+
+	areaList.Empty();
 	TileList.Empty();
 	EastCoastTileList.Empty();
 	WestCoastTileList.Empty();
 	SouthCoastTileList.Empty();
 	NorthCoastTileList.Empty();
 	mapExpansionMode = EMapExpansion::None;
+
+	bAsyncJson = false;
 }
 
 // Called when the game starts or when spawned
 void ASWPMapBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	//Init Coala Instance
+	IntializeCoalaServices();
+
+	//Reset the Work Threads
+	ResetAllTaskThreads();
+
+	//Calculate the Tiles needed based on Lat and Lon
+	UCoalaAreaController::OnGpsPositionChanged(MapZoom, MapLongitude, MapLatitude, TileList, TileListOutOfRange, Areabuffer);
 	
+	//Calculate the Tile Extension
+	CalculateMapTileExtensions(TileList);
+
+	//Create 
+	MapPtrForSuccess.BindUFunction(this, "SuccessfulJsonResponse");
+	MapPtrForError.BindUFunction(this, "PrintErrorString");
+	
+	//Create HTTP Request for each tile
+	CreateTileWebRequest(TileList);
 }
 
 // Called every frame
 void ASWPMapBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	
 
 }
 
@@ -44,7 +80,7 @@ void ASWPMapBase::ClearTileMapList(bool bResetMainList)
 
 }
 
-void ASWPMapBase::CreateMapTileDataBase(TArray<FCoalaRemoteTileRequest> newAreasInRange)
+void ASWPMapBase::CalculateMapTileExtensions(TArray<FCoalaRemoteTileRequest> newAreasInRange)
 {
 
 	TileList = newAreasInRange;
@@ -76,8 +112,6 @@ void ASWPMapBase::CreateMapTileDataBase(TArray<FCoalaRemoteTileRequest> newAreas
 
 		if (maxSouthValue > mapTile.tile_x)
 			maxSouthValue = mapTile.tile_x;
-
-
 
 	}
 
@@ -112,6 +146,8 @@ void ASWPMapBase::CreateMapTileDataBase(TArray<FCoalaRemoteTileRequest> newAreas
 	UE_LOG(LogFlying, Warning, TEXT("South Coast: %d "), number);
 	number = NorthCoastTileList.Num();
 	UE_LOG(LogFlying, Warning, TEXT("North Coast: %d "), number);
+
+
 }
 
 void ASWPMapBase::NeedToExpandMapInDir(EMapExpansion ExpansionMode, TArray<FCoalaRemoteTileRequest>& newTileArray)
@@ -129,7 +165,7 @@ void ASWPMapBase::NeedToExpandMapInDir(EMapExpansion ExpansionMode, TArray<FCoal
 				TileList.Emplace(newTile);
 			}
 			ClearTileMapList(false);
-			CreateMapTileDataBase(TileList);
+			CalculateMapTileExtensions(TileList);
 			UE_LOG(LogFlying, Warning, TEXT("In North Section"));
 			newTileArray = NorthCoastTileList;
 			ShowListItems(NorthCoastTileList);
@@ -146,7 +182,7 @@ void ASWPMapBase::NeedToExpandMapInDir(EMapExpansion ExpansionMode, TArray<FCoal
 				TileList.Emplace(newTile);
 			}
 			ClearTileMapList(false);
-			CreateMapTileDataBase(TileList);
+			CalculateMapTileExtensions(TileList);
 			UE_LOG(LogFlying, Warning, TEXT("In South Section"));
 			newTileArray = SouthCoastTileList;
 			ShowListItems(SouthCoastTileList);
@@ -163,7 +199,7 @@ void ASWPMapBase::NeedToExpandMapInDir(EMapExpansion ExpansionMode, TArray<FCoal
 				TileList.Emplace(newTile);
 			}
 			ClearTileMapList(false);
-			CreateMapTileDataBase(TileList);
+			CalculateMapTileExtensions(TileList);
 			newTileArray = EastCoastTileList;
 			ShowListItems(EastCoastTileList);
 			UE_LOG(LogFlying, Warning, TEXT("In East Section"));
@@ -180,7 +216,7 @@ void ASWPMapBase::NeedToExpandMapInDir(EMapExpansion ExpansionMode, TArray<FCoal
 				TileList.Emplace(newTile);
 			}
 			ClearTileMapList(false);
-			CreateMapTileDataBase(TileList);
+			CalculateMapTileExtensions(TileList);
 			newTileArray = WestCoastTileList;
 			ShowListItems(WestCoastTileList);
 			UE_LOG(LogFlying, Warning, TEXT("In West Section"));
@@ -207,11 +243,18 @@ void ASWPMapBase::ShowListItems(TArray<FCoalaRemoteTileRequest> mList)
 void ASWPMapBase::IntializeCoalaServices()
 {
 	UCoalaAreaController::InitCoala();
-	//SpawnCenteralActor();
+	SpawnCenteralActor();
 }
 
 void ASWPMapBase::SpawnCenteralActor()
 {
+	ATopDownPlayerController* pc = Cast<ATopDownPlayerController>(GetWorld()->GetFirstPlayerController());
+
+	if (pc != nullptr)
+	{
+		UE_LOG(LogFlying, Warning, TEXT("Found Player Controller Reference"));
+	}
+
 	FActorSpawnParameters SpawnInfo;
 	SpawnInfo.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	UWorld* const world = GetWorld();
@@ -221,6 +264,211 @@ void ASWPMapBase::SpawnCenteralActor()
 	MapCentralActor = world->SpawnActor(AActor::StaticClass(), &Location, &Rotation, SpawnInfo);
 
 	if (MapCentralActor != nullptr)
+	{
 		UE_LOG(LogFlying, Warning, TEXT("Map Center Actor Spawned Successfully"));
-
+		//pc->SetAnchorObject(MapCentralActor);
+	}
 }
+
+void ASWPMapBase::ResetAllTaskThreads()
+{
+	UCoalaBlueprintUtility::ResetBuildingsMeshThread();
+	UCoalaBlueprintUtility::ResetCellMeshThread();
+	UCoalaBlueprintUtility::ResetJsonThread();
+	UCoalaBlueprintUtility::ResetBuildingsMeshThread();
+	UCoalaBlueprintUtility::ResetWaterMeshThread();
+	UCoalaBlueprintUtility::ResetStreetsMeshThread();
+	UE_LOG(LogFlying, Warning, TEXT("All working threads are Reset"));
+}
+
+void ASWPMapBase::SetPlayerCharacterRef(ASWPCoalaPawn* playerCharacter)
+{
+	PlayerCharacter = playerCharacter;
+
+	if(PlayerCharacter != nullptr)
+	{ 
+		UE_LOG(LogFlying, Warning, TEXT("We got the Coala Character"));
+	//	PlayerCharacter->MapObject = this;
+	}
+	else
+	{
+		UE_LOG(LogFlying, Warning, TEXT("We didn't get the Coala Character"));
+	}
+}
+
+void ASWPMapBase::SuccessfulJsonResponse(FString str)
+{
+	/*if (areaList == NULL)
+	{
+		UE_LOG(LogFlying, Warning, TEXT("Area list is Null. Now Returning"));
+		return;
+	}*/
+	
+	areaList.Emplace(str);
+
+	if (bAsyncJson)
+	{
+		UE_LOG(LogFlying, Warning, TEXT("Thread is still working on..."));
+		return;
+
+		/*
+		if (areaListIndex < areaList.Num())
+		{
+			FString newAreaString = areaList[areaListIndex];
+
+			UCoalaBlueprintUtility::LoadCoalaAreaFromResponseAsync(newAreaString, 0, 1, 2);
+			FCoalaReadJsonAsync::Runnable->JsonRead.BindUFunction(this, "PrintJsonString");
+
+			UE_LOG(LogFlying, Warning, TEXT("Area List is making thread request for %d th. "),areaListIndex+1);
+			areaListIndex++;
+		}
+
+		if (areaListIndex == areaList.Num())
+		{
+			areaListIndex = 0;
+			UE_LOG(LogFlying, Warning, TEXT("Area List done with all the Indexes"));
+		}
+		*/
+	}
+	else
+	{
+		CoalaAreaSet = UCoalaBlueprintUtility::LoadCoalaAreaFromResponse(str, 
+						defaultBuildingLevel, clampToDefaultBuildingLevel,
+						limitMaxBuildingLevelTo);
+
+		if (CoalaAreaSet != nullptr)
+		{
+			UE_LOG(LogFlying, Warning, TEXT("found Coala Area Value "));
+			CreateGridCells(CoalaAreaSet);
+			CreateWaterMeshes(CoalaAreaSet);
+			//CreateAreaDimensions(CoalaAreaSet);
+			CreateStreetMeshes(CoalaAreaSet);
+			CreateBuildingMeshes(CoalaAreaSet);
+			UCoalaAreaController::AddKnownArea(CoalaAreaSet);
+		}
+	}
+
+	//UCoalaBlueprintUtility::LoadCoalaAreaFromResponseAsync(str, 0, 1, 2);	
+	//FCoalaReadJsonAsync::Runnable->JsonRead.BindUFunction(this, "PrintJsonString");
+	//bThreadStarted = true;
+
+	/*while (!UCoalaBlueprintUtility::AsyncLoadingDone())
+	{
+		CoalaAreaSet = UCoalaBlueprintUtility::GetAsyncJsonResult();
+		if (CoalaAreaSet != nullptr)
+			UE_LOG(LogFlying, Warning, TEXT("found Coala Area Value "));
+	}
+	do
+	{
+
+	}*/
+	
+	
+	
+}
+
+void ASWPMapBase::PrintJsonString()
+{
+	UE_LOG(LogFlying, Warning, TEXT("Json Reading is done "));
+
+	FCoalaReadJsonAsync::Runnable->JsonRead.Unbind();
+}
+
+
+void ASWPMapBase::PrintErrorString(FString str)
+{
+	UE_LOG(LogFlying, Warning, TEXT("Printing ERROR: %s"), *str);
+}
+
+void ASWPMapBase::CreateTileWebRequest(TArray<FCoalaRemoteTileRequest> mapList)
+{
+	for (FCoalaRemoteTileRequest mTile : mapList)
+	{
+		EOutputPins_CoalaRequestResult branches;
+		UBluePrintHttpGetRequest* Request = UCoalaBlueprintUtility::MakeCoalaRequest(APIKey, mTile, 126, branches);
+		Request->OnSuccess.Add(MapPtrForSuccess);
+		Request->OnError.Add(MapPtrForError); 
+	}
+}
+
+void ASWPMapBase::CreateGridCells(UCoalaArea* mCoalaArea)
+{
+	TArray<UCoalaCell*> cellGrid = mCoalaArea->grid;
+	ACoalaMeshActor* cellActor = UCoalaMeshGenerator::CreateCells(MapCentralActor, mCoalaArea, cellGrid, defaultCellRenderConfig, CellRenderConfigList);
+
+	if (cellActor != nullptr)
+	{
+		//UE_LOG(LogFlying, Warning, TEXT("Cell Actor is Created "));
+		FVector newCellPosition = FVector(cellActor->GetActorLocation().X, cellActor->GetActorLocation().Y, CellZOffSet);
+		cellActor->SetActorLocation(newCellPosition, false, nullptr, ETeleportType::None);
+		//UCoalaAreaController::AddKnownArea(mCoalaArea);
+	}
+}
+
+void ASWPMapBase::CreateAreaDimensions(UCoalaArea* mCoalaArea)
+{
+	ACoalaMeshActor* CoalaAreaMesh = UCoalaMeshGenerator::CreateAreaDimensions(MapCentralActor, mCoalaArea, AreaMaterial);
+
+	if (CoalaAreaMesh != nullptr)
+	{
+		//UE_LOG(LogFlying, Warning, TEXT("Cell Actor is Created "));
+		FVector newCellPosition = FVector(CoalaAreaMesh->GetActorLocation().X, CoalaAreaMesh->GetActorLocation().Y, CellZOffSet);
+		CoalaAreaMesh->SetActorLocation(newCellPosition, false, nullptr, ETeleportType::None);
+		//UCoalaAreaController::AddKnownArea(mCoalaArea);
+	}
+}
+
+void ASWPMapBase::CreateWaterMeshes(UCoalaArea* mCoalaArea)
+{
+	TArray<UCoalaWater*> waterGrid = mCoalaArea->water;
+
+	for (UCoalaWater* waterCell : waterGrid)
+	{
+		ACoalaMeshActor* waterMesh = UCoalaMeshGenerator::CreateWater(MapCentralActor, mCoalaArea, waterCell, WaterMaterial, true, WaterOutlineWidth, WaterOutlineMaterial);
+
+		if (waterMesh != nullptr)
+		{
+			//UE_LOG(LogFlying, Warning, TEXT("Cell Actor is Created "));
+			FVector newCellPosition = FVector(waterMesh->GetActorLocation().X, waterMesh->GetActorLocation().Y, CellZOffSet+1);
+			waterMesh->SetActorLocation(newCellPosition, false, nullptr, ETeleportType::None);
+		}
+	}
+
+	//UCoalaAreaController::AddKnownArea(mCoalaArea);
+}
+
+void ASWPMapBase::CreateStreetMeshes(UCoalaArea* mCoalaArea)
+{
+	TArray<UCoalaStreets*> streetsGrid = mCoalaArea->streets;
+
+	for (UCoalaStreets* StreetCell : streetsGrid)
+	{
+		ACoalaMeshActor* StreetMesh = UCoalaMeshGenerator::CreateStreets(MapCentralActor, mCoalaArea, StreetCell, defaultStreetRenderConfig, StreetRenderConfigList); 
+		
+		if (StreetMesh != nullptr)
+		{
+			FVector newCellPosition = FVector(StreetMesh->GetActorLocation().X, StreetMesh->GetActorLocation().Y, CellZOffSet);
+			StreetMesh->SetActorLocation(newCellPosition, false, nullptr, ETeleportType::None);
+		}
+	}
+
+	//UCoalaAreaController::AddKnownArea(mCoalaArea);
+}
+
+
+void ASWPMapBase::CreateBuildingMeshes(UCoalaArea* mCoalaArea)
+{
+	// We are making the buildings and combining them
+	TArray<UCoalaBuilding*> buildingGrid = mCoalaArea->buildings;
+
+	ACoalaMeshActor* BuildingMesh = UCoalaMeshGenerator::CreateBuildings(MapCentralActor, mCoalaArea, buildingGrid, BuildingMeshes, BuildingFloorMaterial, BuildingWallMaterial, BuildingRoofMaterial, GenerateBuildingUV, BuildingHeightPerLevel, GenerateCollisionForBuildings);
+
+	if (BuildingMesh != nullptr)
+	{
+		FVector newCellPosition = FVector(BuildingMesh->GetActorLocation().X, BuildingMesh->GetActorLocation().Y, CellZOffSet);
+		BuildingMesh->SetActorLocation(newCellPosition, false, nullptr, ETeleportType::None);
+	}
+	
+}
+
+
