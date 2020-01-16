@@ -12,6 +12,8 @@
 #include "Core/Public/Async/Async.h"
 
 
+DECLARE_DELEGATE(FJsonRead);
+
 class THOUGHTFISHCOALAPLUGIN_API FCoalaReadJsonAsync : public FRunnable
 {
 public:
@@ -48,4 +50,5 @@ public:
 	static bool IsThreadFinished();
 	static void JsonToCoalaArea(FString jsonString, int defaultBuildingLevel, bool clampToDefaultBuildingLevel, int limitMaxBuildingLevelTo, bool async, UCoalaArea* ret);
 
+	FJsonRead JsonRead;
 };
