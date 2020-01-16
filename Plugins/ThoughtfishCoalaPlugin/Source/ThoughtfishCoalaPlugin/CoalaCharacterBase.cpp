@@ -150,7 +150,7 @@ void ACoalaCharacterBase::Tick(float DeltaTime)
 		//CursorToWorld->SetWorldLocation(TraceHitResult.Location);
 		//CursorToWorld->SetWorldRotation(CursorR);
 
-		if (PC->IsInputKeyDown(EKeys::E) == true)
+		/*if (PC->IsInputKeyDown(EKeys::E) == true)
 		{
 			OnRotateCamera(-1);
 		}
@@ -165,7 +165,7 @@ void ACoalaCharacterBase::Tick(float DeltaTime)
 		else if (PC->IsInputKeyDown(EKeys::G) == true)
 		{
 			OnZoomCamera(-1);
-		}
+		}*/
 		//PC->InputTouch()
 	}
 }
