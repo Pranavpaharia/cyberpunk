@@ -447,7 +447,7 @@ void ASWPMapBase::CreateStreetMeshes(UCoalaArea* mCoalaArea)
 		
 		if (StreetMesh != nullptr)
 		{
-			FVector newCellPosition = FVector(StreetMesh->GetActorLocation().X, StreetMesh->GetActorLocation().Y, CellZOffSet);
+			FVector newCellPosition = FVector(StreetMesh->GetActorLocation().X, StreetMesh->GetActorLocation().Y, CellZOffSet+0.5f);
 			StreetMesh->SetActorLocation(newCellPosition, false, nullptr, ETeleportType::None);
 		}
 	}
