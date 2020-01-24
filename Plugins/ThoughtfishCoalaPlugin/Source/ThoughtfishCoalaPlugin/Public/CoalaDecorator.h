@@ -11,6 +11,7 @@
 UENUM(BlueprintType,Blueprintable,Meta = (Bitmask, Bitflags, UseEnumValuesAsMaskValuesInEditor="true", BitmaskEnum="OPTIONS_AREA_DECORATION_IGNORE") )
 enum class OPTIONS_AREA_DECORATION_IGNORE : uint8
 {
+	NONE = 0,
 	WATER = 1,	
 	STREETS = 2,		
 	BUILDINGS = 4
@@ -20,6 +21,7 @@ ENUM_CLASS_FLAGS( OPTIONS_AREA_DECORATION_IGNORE )
 UENUM(BlueprintType,Blueprintable,Meta = (Bitmask, Bitflags, UseEnumValuesAsMaskValuesInEditor="true", BitmaskEnum="OPTIONS_AREA_DECORATION_USE_CONFIG_TO") )
 enum class OPTIONS_AREA_DECORATION_USE_CONFIG_TO : uint8
 {
+	NONE = 0,
 	CELLS = 1,	
 //	WATER = 2,		
 //	BUILDINGS = 4

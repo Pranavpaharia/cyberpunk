@@ -24,6 +24,7 @@ enum class EOutputPins_CoalaRequestResult : uint8
 UENUM( BlueprintType, Meta = (Bitflags) )
 enum class REQUEST_CONTEXT : uint8
 {
+	NONE = 0,
 	GAMETAGS = 1,	
 	POIS,		
 	WEATHER,	

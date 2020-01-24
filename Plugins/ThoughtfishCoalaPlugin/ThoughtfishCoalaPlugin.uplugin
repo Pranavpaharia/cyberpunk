@@ -10,7 +10,7 @@
 	"DocsURL": "https://sites.google.com/a/thoughtfish.de/coalapluginunreal/",
 	"MarketplaceURL": "com.epicgames.launcher://ue/marketplace/content/bf523fe15d19423bae4e18ce537c1826",
 	"SupportURL": "hello@thoughtfish.de",
-	"EngineVersion": "4.23.0",
+	"EngineVersion": "4.24.0",
 	"CanContainContent": true,
 	"IsBetaVersion": true,
 	"Installed": true,

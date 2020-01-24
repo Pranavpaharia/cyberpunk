@@ -44,9 +44,9 @@ ACoalaCharacterBase::ACoalaCharacterBase()
 	// Create a camera boom...
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->bAbsoluteRotation = true; // Don't want arm to rotate when character does
+	CameraBoom->SetUsingAbsoluteRotation(true); // Don't want arm to rotate when character does
 	CameraBoom->TargetArmLength = distanceToPLayer;
-	CameraBoom->RelativeRotation = cameraRotation;
+	CameraBoom->SetRelativeRotation(cameraRotation);
 	CameraBoom->bDoCollisionTest = false; // Don't want to pull camera in when it collides with level
 
 	// Create a camera...

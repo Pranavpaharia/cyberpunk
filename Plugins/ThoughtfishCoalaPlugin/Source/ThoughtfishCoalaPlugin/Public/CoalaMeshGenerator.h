@@ -44,6 +44,7 @@ struct THOUGHTFISHCOALAPLUGIN_API FCoalaStreetRenderConfig
 UENUM(BlueprintType,Blueprintable,Meta = (Bitmask, Bitflags, UseEnumValuesAsMaskValuesInEditor = "true", BitmaskEnum="OPTIONS_MESH_CREATION_BUILDING") )
 enum class OPTIONS_MESH_CREATION_BUILDING : uint8
 {
+	NONE = 0,
 	FLOOR = 1,	
 	WALLS = 2,		
 	ROOF = 4
