@@ -6,6 +6,7 @@
 #include "TopDownPlayerController.h"
 #include "SWPCoalaPawn.h"
 #include "SWPMapBase.h"
+#include "DebugUserInterface.h"
 #include "SWPPlayerController.generated.h"
 
 /**
@@ -31,6 +32,7 @@ public:
 	ASWPCoalaPawn* playerObject;
 	bool bStartDistanceCheck;
 	UActorComponent* playerComponent;
+	UDebugUserInterface* DebugUI;
 
 	float distanceEWAxisMaxRange;
 	bool bEWDistanceCheck;

@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "SWPMapBase.h"
+#include "DebugUserInterface.h"
 #include "TopDownPlayerController.h"
 #include "SWPCoalaGameMode.generated.h"
 
@@ -28,6 +29,11 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ASWPMapBase> mapObjectBP;
+
+	TSubclassOf<class UDebugUserInterface> DebugWidgetBP;
+	UDebugUserInterface* debugMenu;
+
+	
 };
 
 

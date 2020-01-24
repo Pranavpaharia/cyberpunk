@@ -4,12 +4,21 @@
 #include "SWPCoala.h"
 #include "CoalaCharacterBase.h"
 #include "SWPPlayerController.h"
+#include "Runtime/UMG/Public/Blueprint/UserWidget.h"
 #include "SWPCoalaPawn.h"
 
 ASWPCoalaGameMode::ASWPCoalaGameMode()
 {
 	// set default pawn class to our flying pawn
 	//DefaultPawnClass = ASWPCoalaPawn::StaticClass();
+	
+	ConstructorHelpers::FObjectFinder<UBlueprint> iaWidgetClass(TEXT("WidgetBlueprint'/Game/Flying/Utilities/DebugMenu.DebugMenu'"));
+
+	if (iaWidgetClass.Object)
+	{
+		DebugWidgetBP = (UClass*)iaWidgetClass.Object->GeneratedClass;
+	}
+
 }
 
 void ASWPCoalaGameMode::BeginPlay()
@@ -18,7 +27,21 @@ void ASWPCoalaGameMode::BeginPlay()
 
 	GetWorldPawn();
 
+	//TSubclassOf<UUserWidget>* widget1 = LoadDebugUIFromPath(TEXT("D:/Projects/SWPCoala/Content/Flying/Utilities/DebugMenu.uasset"));
 	
+	if (DebugWidgetBP != nullptr)
+	{
+		debugMenu = Cast<UDebugUserInterface>(CreateWidget(GetWorld()->GetFirstPlayerController(), DebugWidgetBP, TEXT("DEBUGSCREEN")));
+		debugMenu->AddToViewport(0);
+	}
+
+	ASWPPlayerController* pC = Cast<ASWPPlayerController>(GetWorld()->GetFirstPlayerController());
+	if (pC != nullptr)
+	{
+		pC->SetAnchorObject(mapObject);
+		pC->DebugUI = debugMenu;
+	}
+
 }
 
 void ASWPCoalaGameMode::GetWorldPawn()
@@ -58,7 +81,5 @@ void ASWPCoalaGameMode::SpawnMapTiler()
 	mapObject->SetPlayerCharacterRef(swpCharacter);
 	swpCharacter->mapObject = mapObject;
 
-	ASWPPlayerController* pC = Cast<ASWPPlayerController>(world->GetFirstPlayerController());
-	if (pC != nullptr)
-		pC->SetAnchorObject(mapObject);
+	
 }

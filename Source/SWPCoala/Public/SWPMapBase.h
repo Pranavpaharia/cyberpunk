@@ -8,6 +8,8 @@
 #include "CoalaMeshGenerator.h"
 #include "CoalaArea.h"
 #include "SWPCoalaPawn.h"
+#include "SWPSaveGame.h"
+#include "Kismet/GameplayStatics.h"
 #include "ThoughtfishCoalaPlugin/Public/CoalaRemoteTileRequest.h"
 #include "SWPMapBase.generated.h"
 
@@ -145,6 +147,24 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Streets")
 	void CreateBuildingMeshes(UCoalaArea* mCoalaArea);
 
+	UFUNCTION(BlueprintCallable, Category = SaveGame)
+	bool LoadSaveData();
+
+	UFUNCTION(BlueprintCallable, Category = SaveGame)
+	bool AddTileInfo(const FString& key, const FString& val);
+
+	UFUNCTION(BlueprintCallable, Category = SaveGame)
+	void RetrieveSavedTileInfo(TArray<FCoalaRemoteTileRequest>& mapList);
+
+	void SavingValuesToSaveGameObject();
+
+	UFUNCTION(BlueprintCallable, Category = SaveGame)
+	void OnSaveGameComplete();
+
+	void CreateCoalaArea(FString strCoala);
+
+	FCoalaRemoteTileRequest* GetCoalaRemoteTileFromString(FString& str);
+
 public:
 	//This is for member variables
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "MapTiles")
@@ -269,5 +289,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Building")
 	bool GenerateCollisionForBuildings = true;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = SaveGame)
+	USWPSaveGame* mSaveGame;
 
+	float tSaveObjectTime;
+	bool bSaveGameObject;
+
+	FAsyncSaveGameToSlotDelegate SavedDelegate;
 };

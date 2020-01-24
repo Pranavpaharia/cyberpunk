@@ -8,6 +8,7 @@
 #include "CoalaReadJsonAsync.h"
 #include "TopDownPlayerController.h"
 #include "CoalaMeshActor.h"
+#include "Kismet/GameplayStatics.h"
 #include "CoalaBlueprintUtility.h"
 
 class UCoalaAreaController;
@@ -32,12 +33,18 @@ ASWPMapBase::ASWPMapBase()
 	mapExpansionMode = EMapExpansion::None;
 
 	bAsyncJson = false;
+	bSaveGameObject = false;
 }
 
 // Called when the game starts or when spawned
 void ASWPMapBase::BeginPlay()
 {
 	Super::BeginPlay();
+
+	SavedDelegate.BindUFunction(this, FName(TEXT("OnSaveGameComplete")));
+
+	//Load Saved Data
+	LoadSaveData();
 
 	//Init Coala Instance
 	IntializeCoalaServices();
@@ -51,10 +58,16 @@ void ASWPMapBase::BeginPlay()
 	//Calculate the Tile Extension
 	CalculateMapTileExtensions(TileList);
 
+	//Check Which Tiles to Remove
+	RetrieveSavedTileInfo(TileList);
+
+	
+
 	//Create 
 	MapPtrForSuccess.BindUFunction(this, "SuccessfulJsonResponse");
 	MapPtrForError.BindUFunction(this, "PrintErrorString");
 	
+
 	//Create HTTP Request for each tile
 	CreateTileWebRequest(TileList);
 }
@@ -64,7 +77,17 @@ void ASWPMapBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	
+	if (bSaveGameObject)
+	{
+		tSaveObjectTime -= DeltaTime;
+
+		if (tSaveObjectTime < 0)
+		{
+			bSaveGameObject = false;
+			tSaveObjectTime = 5;
+			SavingValuesToSaveGameObject();
+		}
+	}
 
 }
 
@@ -298,12 +321,18 @@ void ASWPMapBase::SetPlayerCharacterRef(ASWPCoalaPawn* playerCharacter)
 
 void ASWPMapBase::SuccessfulJsonResponse(FString str)
 {
-	/*if (areaList == NULL)
+	//Save the response in a list
+	FString tileIDInfoStr = mSaveGame->ParseResponse(str);
+	if (AddTileInfo(tileIDInfoStr, str))
 	{
-		UE_LOG(LogFlying, Warning, TEXT("Area list is Null. Now Returning"));
-		return;
-	}*/
+		tSaveObjectTime = 5;
+		bSaveGameObject = true;
+	}
+		
+		
 	
+	
+
 	areaList.Emplace(str);
 
 	if (bAsyncJson)
@@ -338,7 +367,7 @@ void ASWPMapBase::SuccessfulJsonResponse(FString str)
 
 		if (CoalaAreaSet != nullptr)
 		{
-			UE_LOG(LogFlying, Warning, TEXT("found Coala Area Value "));
+			UE_LOG(LogFlying, Warning, TEXT("Found Coala Area From HTTP Request "));
 			CreateGridCells(CoalaAreaSet);
 			CreateWaterMeshes(CoalaAreaSet);
 			//CreateAreaDimensions(CoalaAreaSet);
@@ -384,10 +413,13 @@ void ASWPMapBase::CreateTileWebRequest(TArray<FCoalaRemoteTileRequest> mapList)
 {
 	for (FCoalaRemoteTileRequest mTile : mapList)
 	{
-		EOutputPins_CoalaRequestResult branches;
-		UBluePrintHttpGetRequest* Request = UCoalaBlueprintUtility::MakeCoalaRequest(APIKey, mTile, 126, branches);
-		Request->OnSuccess.Add(MapPtrForSuccess);
-		Request->OnError.Add(MapPtrForError); 
+		if(mTile.zoom != 0)
+		{
+			EOutputPins_CoalaRequestResult branches;
+			UBluePrintHttpGetRequest* Request = UCoalaBlueprintUtility::MakeCoalaRequest(APIKey, mTile, 126, branches);
+			Request->OnSuccess.Add(MapPtrForSuccess);
+			Request->OnError.Add(MapPtrForError);
+		}
 	}
 }
 
@@ -468,7 +500,186 @@ void ASWPMapBase::CreateBuildingMeshes(UCoalaArea* mCoalaArea)
 		FVector newCellPosition = FVector(BuildingMesh->GetActorLocation().X, BuildingMesh->GetActorLocation().Y, CellZOffSet);
 		BuildingMesh->SetActorLocation(newCellPosition, false, nullptr, ETeleportType::None);
 	}
-	
 }
 
+bool ASWPMapBase::LoadSaveData()
+{
+	bool bStatus = false;
 
+	//Get the slot no
+	USWPSaveGame* tSaveObject = Cast<USWPSaveGame>(UGameplayStatics::CreateSaveGameObject(USWPSaveGame::StaticClass()));
+
+	if (mSaveGame == nullptr)
+	{
+		mSaveGame = Cast<USWPSaveGame>(UGameplayStatics::LoadGameFromSlot(tSaveObject->SaveSlotName, 0));
+
+		if (mSaveGame == nullptr)
+		{
+			mSaveGame = Cast<USWPSaveGame>(UGameplayStatics::CreateSaveGameObject(USWPSaveGame::StaticClass()));
+			UE_LOG(LogFlying, Warning, TEXT("Created a new Save game Object"));
+			bStatus = true;
+		}
+		else
+		{
+			UE_LOG(LogFlying, Warning, TEXT("Loaded Data From Previously Save Instance "));
+			bStatus = true;
+		}
+	}
+	
+	return bStatus;
+}
+
+bool ASWPMapBase::AddTileInfo(const FString& key,const FString& val)
+{
+	bool bFileAdded = false;
+		
+	if (mSaveGame->TileInfoList.Contains(key) && mSaveGame != nullptr)
+	{
+		UE_LOG(LogFlying, Warning, TEXT("Tile Information Already Found in Save System "));
+	}
+	else
+	{
+		mSaveGame->TileInfoList.Emplace(key, val);
+		bFileAdded = true;
+	}
+
+	return bFileAdded;
+}
+
+void ASWPMapBase::RetrieveSavedTileInfo(TArray<FCoalaRemoteTileRequest>& mapList)
+{
+
+	//auto itr = mSaveGame->TileInfoList.CreateConstIterator();
+
+	/*for (auto elem : mSaveGame->TileInfoList)
+	{
+		int xIndex = 0;
+		FString xStr = TEXT("X");
+		FString strCoalaTile = elem.Key;
+
+		if (strCoalaTile.Find(xStr, ESearchCase::IgnoreCase, ESearchDir::FromStart, 0), xIndex)
+		{
+			
+		}
+
+		UE_LOG(LogFlying, Warning, TEXT("Found X Value at %d "), xIndex);
+	}*/
+
+	//TArray<int> RemovableIDs;
+
+	for (int i = 0; i < mapList.Num(); i++)
+	{
+		FString tileIDformat;
+		tileIDformat = FString::FromInt(mapList[i].tile_x) + TEXT("X /");
+		tileIDformat += FString::FromInt(mapList[i].tile_y) + TEXT("Y /");
+		tileIDformat += FString::FromInt(mapList[i].zoom) + TEXT("Z");
+
+		if (mSaveGame->TileInfoList.Contains(tileIDformat))
+		{
+			FCoalaRemoteTileRequest mEmptyTile;
+			mEmptyTile.tile_x = 0;
+			mEmptyTile.tile_y = 0;
+			mEmptyTile.zoom = 0;
+
+			mapList[i] = mEmptyTile;
+			//RemovableIDs.Emplace(i);
+			UE_LOG(LogFlying, Warning, TEXT("Found in Database: %s"), *tileIDformat);
+			CreateCoalaArea(mSaveGame->TileInfoList[tileIDformat]);
+		}
+	}
+
+	//for (int iD : RemovableIDs)
+	//{
+	//	if (TileList.IsValidIndex(iD))
+	//	{
+	//		//TileList.RemoveAt(iD,1,false);
+	//		TileList.RemoveAtSwap(iD, 1, false);
+	//	}
+	//}
+
+	//TArray<FString> keyList;
+ //	mSaveGame->TileInfoList.GetKeys(keyList);
+
+	//for (FString str : keyList)
+	//{
+
+	//}
+	//
+
+
+
+
+
+	//for (FCoalaRemoteTileRequest TileID : TileList)
+	//{
+	//	//Format the Tile ID for searching in Save Game Object TMap
+	//	FString tileIDformat;
+	//	tileIDformat = FString::FromInt(TileID.tile_x) + TEXT("X /");
+	//	tileIDformat += FString::FromInt(TileID.tile_y) + TEXT("Y /");
+	//	tileIDformat += FString::FromInt(TileID.zoom) + TEXT("Z");
+
+	//	if (mSaveGame->TileInfoList.Contains(tileIDformat))
+	//	{
+	//		TileList.Remove(TileID);
+	//		UE_LOG(LogFlying, Warning, TEXT("Found in Database: %s"), *tileIDformat);
+	//	}
+	//}
+}
+
+void ASWPMapBase::OnSaveGameComplete()
+{
+	UE_LOG(LogFlying, Warning, TEXT("Saving Data Successful"));
+}
+
+void ASWPMapBase::SavingValuesToSaveGameObject()
+{
+	check(mSaveGame)
+
+	UGameplayStatics::AsyncSaveGameToSlot(mSaveGame, mSaveGame->SaveSlotName, 0, SavedDelegate);
+	
+	//if(UGameplayStatics::SaveGameToSlot(mSaveGame, mSaveGame->SaveSlotName, 0))
+	//{
+	//	UE_LOG(LogFlying, Warning, TEXT("Saving Data Successful"));
+	//	//GetWorld()->GetTimerManager().ClearTimer(SaveTileInfoHandler);
+	//}
+}
+
+void ASWPMapBase::CreateCoalaArea(FString strCoala)
+{
+	if (bAsyncJson)
+	{
+		UE_LOG(LogFlying, Warning, TEXT("Thread is still working on..."));
+		return;
+	}
+	else
+	{
+		CoalaAreaSet = UCoalaBlueprintUtility::LoadCoalaAreaFromResponse(strCoala,
+			defaultBuildingLevel, clampToDefaultBuildingLevel,
+			limitMaxBuildingLevelTo);
+
+		if (CoalaAreaSet != nullptr)
+		{
+			UE_LOG(LogFlying, Warning, TEXT("Created Coala Area Locally "));
+			CreateGridCells(CoalaAreaSet);
+			CreateWaterMeshes(CoalaAreaSet);
+			//CreateAreaDimensions(CoalaAreaSet);
+			CreateStreetMeshes(CoalaAreaSet);
+			CreateBuildingMeshes(CoalaAreaSet);
+			UCoalaAreaController::AddKnownArea(CoalaAreaSet);
+		}
+	}
+}
+
+FCoalaRemoteTileRequest* ASWPMapBase::GetCoalaRemoteTileFromString(FString& str)
+{
+	int xIndex = 0;
+	FString xStr = TEXT("X /");
+	
+	if (str.Find(xStr, ESearchCase::IgnoreCase, ESearchDir::FromStart, 0), xIndex)
+	{
+		UE_LOG(LogFlying, Warning, TEXT("Found X Value at %d "), xIndex);
+	}
+
+	FCoalaRemoteTileRequest* coalaTile = new FCoalaRemoteTileRequest();
+	return coalaTile;
+}

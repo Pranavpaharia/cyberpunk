@@ -9,9 +9,24 @@
 /**
  * 
  */
-UCLASS()
-class SWPCOALA_API UDebugUserInterface : public UUserWidget
+class FRegistryObject;
+
+UCLASS(BlueprintType)
+class SWPCOALA_API UDebugUserInterface : public UUserWidget, public TSharedFromThis<UDebugUserInterface>
 {
 	GENERATED_BODY()
-	
+
+public:
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "User Widget")
+	FString Heading1;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "User Widget")
+	FString Heading2;
+
+	virtual void NativeOnInitialized() override;
+
+	virtual void NativeConstruct() override;
+
+//	virtual void Register(const TCHAR* PackageName, const TCHAR* Name) override;
 };

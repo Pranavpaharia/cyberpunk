@@ -3,3 +3,15 @@
 
 #include "SWPGameInstance.h"
 
+USWPGameInstance::USWPGameInstance()
+{
+	mSaveGame = nullptr;
+}
+
+void USWPGameInstance::Init()
+{
+	Super::Init();
+}
+
+
+

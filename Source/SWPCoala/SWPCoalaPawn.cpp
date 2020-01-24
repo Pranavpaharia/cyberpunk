@@ -11,6 +11,8 @@
 
 ASWPCoalaPawn::ASWPCoalaPawn()
 {
+
+	
 	// Structure to hold one-time initialization
 	struct FConstructorStatics
 	{
@@ -21,6 +23,8 @@ ASWPCoalaPawn::ASWPCoalaPawn()
 		}
 	};
 	static FConstructorStatics ConstructorStatics;
+
+	AutoReceiveInput = EAutoReceiveInput::Player0;
 
 	// Create static mesh component
 	//PlaneMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlaneMesh0"));
@@ -87,9 +91,11 @@ void ASWPCoalaPawn::SetupPlayerInputComponent(class UInputComponent* PlayerInput
 	check(PlayerInputComponent);
 
 	// Bind our control axis' to callback functions
-	/*PlayerInputComponent->BindAxis("Thrust", this, &ASWPCoalaPawn::ThrustInput);
-	PlayerInputComponent->BindAxis("MoveUp", this, &ASWPCoalaPawn::MoveUpInput);
-	PlayerInputComponent->BindAxis("MoveRight", this, &ASWPCoalaPawn::MoveRightInput);*/
+	//PlayerInputComponent->BindAxis("Thrust", this, &ASWPCoalaPawn::ThrustInput);
+	//PlayerInputComponent->BindAxis("MoveUp", this, &ASWPCoalaPawn::MoveUpInput);
+	//PlayerInputComponent->BindAxis("MoveRight", this, &ASWPCoalaPawn::MoveRightInput);
+	PlayerInputComponent->BindAxis("ZoomFactor", this, &ASWPCoalaPawn::ZoomSpringArm);
+	//PlayerInputComponent->BindAxis("MoveRight", this, &ASWPCoalaPawn::MoveRightInput);
 
 	Super::SetupInputComponent();
 }
@@ -171,3 +177,9 @@ EMapExpansion ASWPCoalaPawn::GetExpansionDirection()
 	return mapDir;
 }
 
+
+void ASWPCoalaPawn::ZoomSpringArm(float Val)
+{
+	FString ValueStr = TEXT("Scroll Value: ") + FString::SanitizeFloat(Val);
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *ValueStr);
+}

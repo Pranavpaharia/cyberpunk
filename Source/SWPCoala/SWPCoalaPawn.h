@@ -54,6 +54,8 @@ protected:
 	/** Bound to the horizontal axis */
 	void MoveRightInput(float Val);
 
+	void ZoomSpringArm(float Val);
+
 public:
 
 	/** How quickly forward speed changes */
@@ -83,6 +85,10 @@ public:
 
 	/** Current roll speed */
 	float CurrentRollSpeed;
+
+	/** Current roll speed */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerDir)
+	float SpringLegnthDelta;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = PlayerDir)
 	EPlayerDirEnum PlayerDir;

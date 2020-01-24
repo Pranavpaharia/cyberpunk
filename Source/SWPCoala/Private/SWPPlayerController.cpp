@@ -5,9 +5,11 @@
 
 ASWPPlayerController::ASWPPlayerController()
 {
-	deltaIncreaseRange = 8000;
-	distanceEWAxisMaxRange = 7000;
-	distanceNSAxisMaxRange = 7000;
+	deltaIncreaseRange = 120000;
+	distanceEWAxisMaxRange = 154000;
+	distanceNSAxisMaxRange = 150000;
+
+	
 }
 
 void ASWPPlayerController::BeginPlay()
@@ -34,28 +36,37 @@ void ASWPPlayerController::CheckDistance(bool bCheck)
 		FVector PositionCharacterNSAxis = FVector(playerObject->GetActorLocation().X, 0, 0);
 		FVector PositionCharacterEWAxis = FVector(0, playerObject->GetActorLocation().Y, 0);
 
-		float distanceEWAxis = FVector::Dist(PositionOriginEWAxis, PositionCharacterEWAxis);
-		float distanceNSAxis = FVector::Dist(PositionOriginNSAxis, PositionCharacterNSAxis);
+		int distanceEWAxis = FVector::Dist(PositionOriginEWAxis, PositionCharacterEWAxis);
+		int distanceNSAxis = FVector::Dist(PositionOriginNSAxis, PositionCharacterNSAxis);
 		//float distanceIn = FVector::Dist2D(PositionOrigin, CharacterPosition);
 
 		//UE_LOG(LogTemp, Warning, TEXT("Distance on DistanceEWAxis: %f || DistanceNSAxis: %f"), distanceEWAxis, distanceNSAxis);
 		//UE_LOG(LogTemp, Warning, TEXT("Distance: %f meters"), distanceIn);
-	
+		
+		if (DebugUI)
+		{
+			DebugUI->Heading1 = TEXT("Horizontal: ") + FString::FromInt(distanceEWAxis);
+			DebugUI->Heading2 = TEXT("Vertical: ") + FString::FromInt(distanceNSAxis);
+		}
+		
+
 		if (distanceEWAxis > distanceEWAxisMaxRange)
 		{
 			TArray<FCoalaRemoteTileRequest> newTileArray;
-			distanceEWAxisMaxRange += 2000;
+			distanceEWAxisMaxRange = distanceEWAxis + deltaIncreaseRange;
 			mapAnchorObject->CalculateMapTileExtensions(mapAnchorObject->TileList);
 			mapAnchorObject->NeedToExpandMapInDir(playerObject->GetExpansionDirection(), newTileArray);
+			mapAnchorObject->RetrieveSavedTileInfo(newTileArray);
 			mapAnchorObject->CreateTileWebRequest(newTileArray);
 		}
 
 		if (distanceNSAxis > distanceNSAxisMaxRange)
 		{
 			TArray<FCoalaRemoteTileRequest> newTileArray;
-			distanceNSAxisMaxRange += deltaIncreaseRange;
+			distanceNSAxisMaxRange = distanceNSAxis + deltaIncreaseRange;
 			mapAnchorObject->CalculateMapTileExtensions(mapAnchorObject->TileList);
 			mapAnchorObject->NeedToExpandMapInDir(playerObject->GetExpansionDirection(), newTileArray);
+			mapAnchorObject->RetrieveSavedTileInfo(newTileArray);
 			mapAnchorObject->CreateTileWebRequest(newTileArray);
 		}
 
